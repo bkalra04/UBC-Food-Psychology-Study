@@ -1,0 +1,31 @@
+﻿Restaurant,Delivery_Available,Delivery_Time (Mins),Meal_Name,Meal_Type,On/Off_Campus,Healthiness_Score,Food_Source,Average_Price ($),Comfort_Food_Rating,Typical_Order_Frequency
+Subway,Yes,15-20,Sandwhiches,Fast Food,On Campus,3,Delivery,8-10,3,High
+Freshslice,Yes,15,Pizza,Fast Food,On Campus,2,Delivery,5-10,5,High
+Downlow Chicken,No,10,Fried Chicken,Fast Food,On Campus,1,Dine-in/Takeout,15-25,4,Medium
+Triple O's,No,6-8,Burgers,Fast Food,On Campus,2,Dine-in/Takeout,10-15,4,High
+Steve's Poke Bar,Yes,15,Poke Bowls,Healthy,On Campus,5,Delivery,15-20,3,Medium
+Kinton Ramen,Yes,15-20,Ramen,Asian Cuisine,On Campus,3,Delivery,20-25,5,Medium
+Chipotle,Yes,15,Burritos,Fast Food,On Campus,3-4,Delivery,15-20,4,Medium
+Body Energy Club,Yes,10-15,Smoothies,Healthy,On Campus,5,Delivery,16,2,Medium
+Browns Crafthouse,No,10-12,Pub/Bar Food,Casual Dining,On Campus,2,Dine-in/Takeout,20-30,1,Low
+Honour Roll,No,8-10,Sushi,Healthy,On Campus,4,Dine-in/Takeout,12-15,3,Medium
+The Delly,No,8-10,Deli/Sandwhiches,Healthy,On Campus,4,Dine-in/Takeout,10-15,2,Low
+Gallery - Patio & Lounge,No,10,Pub/Bar Food,Casual Dining,On Campus,2,Dine-in/Takeout,15-25,3,Medium
+Ryuu Japanese Kitchen,Yes,15,Japanese,Asian Cuisine,On Campus,3,Delivery,15-20,3,Medium
+Mercante,No,6-8,Pizza,Casual Dining,On Campus,3,Dine-in/Takeout,10-20,1,Low
+Grocery Checkout,No,8-10,Grocery/Mixed,Microwave,On Campus,3-4,Convenience Store,10-15,5,High
+Harvest,No,6-8,Grocery/Mixed,Microwave,On Campus,3-4,Convenience Store,7-10,5,High
+Hmart,No,15-20,Grocery/Mixed,Microwave,On Campus,3-4,Convenience Store,10-15,5,High
+Mcdonalds,Yes,15-20,Burgers,Fast Food,On Campus,1,Delivery,13-15,5,High
+Big Way,Yes,15-20,Hotpot,Asian Cuisine,On Campus,3-4,Delivery,15-20,5,High
+A&W,Yes,15-20,Burgers,Fast Food,On Campus,1,Delivery,15-20,5,High
+Kokoro Tokyo Mazesoba,Yes,15-20,Japanese,Asian Cuisine,On Campus,3,Delivery,15-25,4,Medium
+Pizza Garden,Yes,15-20,Pizza,Fast Food,On Campus,2,Delivery,5-10,5,High
+Sports Illustrated Clubhouse,No,15-20,Pub/Bar Food,Casual Dining,On Campus,2,Dine-in/Takeout,20-30,3,Medium
+Neptune Chinese Kitchen,Yes,15-20,Chinese,Asian Cuisine,On Campus,3,Delivery,20-30,4,Medium
+My Home Cuisine,Yes,15-20,Chinese,Asian Cuisine,On Campus,4,Delivery,15-20,4,Medium
+Off-Campus Indian Restaurant,Yes,35-50,Indian,Asian Cuisine,Off Campus,2-3,Delivery,20-30,4,Low
+Off-Campus Ramen Restaurant,Yes,25-30,Ramen,Asian Cuisine,Off Campus,3,Delivery,20-25,4,Low
+Off-Campus Fine Dining,No,40-50,Mixed,Casual Dining,Off Campus,3,Dine-in/Takeout,25-35,1,Low
+Off-Campus Sushi Restaurant,Yes,35-50,Sushi,Healthy,Off Campus,4,Delivery,20-25,2,Low
+Off-Campus Pizza Restaurant ,Yes,35-50,Pizza,Fast Food,Off Campus,3,Delivery,20-25,1,Low
