@@ -1,5 +1,5 @@
-# 📚🍜 Campus Cravings @ UBC 
-Campus Cravings @ UBC is a data analysis project that explores how budget constraints, mood, academic stress, and exam periods influence food choices among UBC students. Using student survey data and UBC-specific food options, this project examines whether food decisions are driven more by psychological factors or financial limitations, and how stress affects delivery and comfort food consumption.
+# 📚🍜 UBC Food Psychology Study
+UBC Food Psychology Study @ UBC is a data analysis project that explores how budget constraints, mood, academic stress, and exam periods influence food choices among UBC students. Using student survey data and UBC-specific food options, this project examines whether food decisions are driven more by psychological factors or financial limitations, and how stress affects delivery and comfort food consumption.
 
 The project applies data cleaning, feature engineering, exploratory data analysis, and statistical testing to uncover behavioral patterns in student eating habits. The findings highlight the dominant role of budget constraints in shaping food choices, while showing that academic stress significantly increases delivery food consumption, especially during high-pressure periods.
 
