@@ -14,6 +14,19 @@ The project applies data cleaning, feature engineering, exploratory data analysi
 1. What influences food choices more: mood or money?
 2. How do academic stress and exam periods affect delivery and comfort food consumption?
 
+## Key Findings
+- **Budget > Mood**: Budget constraints significantly influence both spending 
+  and food type choices (p < 0.05), while mood does not (p = 0.31)
+- **Stress → Delivery**: Academic stress significantly increases delivery 
+  food orders (p = 0.001)
+- **Comfort Food**: Neither stress nor exam periods significantly predict 
+  comfort food consumption (p > 0.05)
+
+## Dataset
+- `students_dataset.csv` — student survey data including mood, budget, 
+  study hours, exam period, and food ordering behaviour
+- `food_options_dataset.csv` — UBC-specific food options and pricing data
+
 ## Tech Stack
 Python, pandas, NumPy, matplotlib, seaborn, SciPy
 
