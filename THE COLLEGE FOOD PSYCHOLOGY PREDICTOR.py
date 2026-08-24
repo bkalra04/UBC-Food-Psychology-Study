@@ -7,6 +7,13 @@ import numpy as np
 from scipy import stats
 import warnings
 
+import os
+SAVE_PLOTS = True   # write charts to /figures instead of opening windows
+if SAVE_PLOTS:
+    import matplotlib
+    matplotlib.use("Agg")
+    os.makedirs("figures", exist_ok=True)
+
 pd.set_option("display.max_columns", None)  # Show all columns when printing datasets
 pd.set_option("display.width", 1000)         # Make the display wider for better readability
 
@@ -80,9 +87,12 @@ def convert_budget_to_numeric(budget_str):
         range_parts = str(budget_str).split("-")
         if len(range_parts) == 2:
             return (float(range_parts[0]) + float(range_parts[1])) / 2
-    except:
+    except (ValueError, TypeError):
         return None
     return None
+
+students_df = students_df.loc[:, ~students_df.columns.str.startswith("Unnamed")]
+print(f"✅ Dropped empty columns — {students_df.shape[1]} remain")
 
 students_df["budget_numeric"] = students_df["budget ($)"].apply(convert_budget_to_numeric)
 
@@ -102,9 +112,9 @@ def convert_delivery_time_to_numeric(time_str):
         # Handle ranges
         range_parts = str(time_str).split("-")
         if len(range_parts) == 2:
-            return (float(time_str[0]) + float(time_str[1])) / 2
+            return (float(range_parts[0]) + float(range_parts[1])) / 2
     
-    except:
+    except (ValueError, TypeError):
         return None
     return None
 
@@ -127,9 +137,9 @@ def convert_study_hours_to_numeric(hours_str):
         # Handle ranges
         range_parts = str(hours_str).split("-")
         if len(range_parts) == 2:
-            return (float(hours_str[0]) + float(hours_str[1])) / 2
+            return (float(range_parts[0]) + float(range_parts[1])) / 2
 
-    except:
+    except (ValueError, TypeError):
         return None
     return None
 
@@ -137,12 +147,34 @@ students_df["study_hours_numeric"] = students_df["study_hours_today"].apply(conv
 
 print("✅ Converted budget, delivery time, and study hours into numeric values.")
 
+for col in ["budget_numeric", "delivery_time_numeric", "study_hours_numeric"]:
+    failed = students_df[col].isna().sum()
+    print(f"   {col}: {failed} values failed to parse ({failed/len(students_df)*100:.1f}%)")
+
 # RESEARCH QUESTION 1: WHAT INFLUENCES FOOD CHOICES - MOOD VS MONEY?
 
+def budget_upper_bound(budget_str):
+    """The top of a student's stated range — the real overspending threshold."""
+    budget_str = str(budget_str).strip()
+    if "-" not in budget_str:
+        try:
+            return float(budget_str)
+        except (ValueError, TypeError):
+            return None
+    parts = budget_str.split("-")
+    if len(parts) == 2:
+        try:
+            return float(parts[1])
+        except (ValueError, TypeError):
+            return None
+    return None
+
+students_df["budget_max"] = students_df["budget ($)"].apply(budget_upper_bound)
+
 # Create spending behaviour indicators
-students_df["overspent"] = students_df["actual_amount_spent"] > students_df["budget_numeric"]
+students_df["overspent"] = students_df["actual_amount_spent"] > students_df["budget_max"]
 students_df["spending_ratio"] = students_df["actual_amount_spent"] / students_df["budget_numeric"]
-students_df["budget_differece"] = students_df["actual_amount_spent"] - students_df["budget_numeric"]
+students_df["budget_difference"] = students_df["actual_amount_spent"] - students_df["budget_max"]
 
 # Create mood categories for analysis
 mood_categories = {
@@ -254,27 +286,31 @@ students_df["chose_microwave"] = (students_df["food_type"] == "Microwave")
 # Create comfort food indicators (based on low healthiness and high spending)
 def is_comfort_food_behaviour(row):
     """
-    Identify comfort food ordering behaviour.
+    Comfort eating, defined only by what was eaten and what was spent.
+
+    An earlier version also counted "ordered delivery while stressed",
+    which meant stress was baked into the outcome we then tested stress
+    against. Both indicators here are independent of stress.
     """
     comfort_indicators = 0
 
     # Low healthiness score
     if pd.notna(row["healthiness_level"]) and row["healthiness_level"] <= 2:
         comfort_indicators += 1
-    
-    # Overspending (emotional spending)
+
+    # Spending past their own stated maximum — impulsive rather than planned
     if row["overspent"]:
         comfort_indicators += 1
-    
-    # Delivery during stress
-    if row["ordered_delivery"] and row["stress_category"] in ["High Stress", "Very High Stress"]:
-        comfort_indicators += 1
-    
+
     return comfort_indicators >= 2
+
 
 print("Current columns in students_df:")
 print(students_df.columns)
 students_df["comfort_food_behaviour"] = students_df.apply(is_comfort_food_behaviour, axis=1)
+
+print(students_df["comfort_food_behaviour"].value_counts())
+print(students_df["overspent"].value_counts())
 
 print("✅ Created academic stress variables:")
 print(" - Overall Stress Score (0-10 scale)")
@@ -349,7 +385,8 @@ print("🎯 Finally: Statistical testing and insights")
 plt.figure(figsize=(6,4))
 sns.boxplot(x="mood_category", y="actual_amount_spent", data=students_df)
 plt.title("Actual Amount Spent per Mood Category")
-plt.show()
+plt.savefig("figures/3-1-spending-by-mood.png", dpi=150, bbox_inches="tight")
+plt.close()
 
 # INTERPREATION:
 # Shows if spending changes alot between moods. 
@@ -359,7 +396,8 @@ plt.show()
 plt.figure(figsize=(6,4))
 sns.boxplot(x="budget_constraint", y="actual_amount_spent", data=students_df)
 plt.title("Actual Amount Spent per Budget Constraint")
-plt.show()
+plt.savefig("figures/3-2-spending-by-budget.png", dpi=150, bbox_inches="tight")
+plt.close()
 
 # INTERPREATION:
 # Shows if spending changes alot between budget levels. 
@@ -369,7 +407,8 @@ plt.show()
 plt.figure(figsize=(6,4))
 sns.countplot(x="mood_category", hue="food_type", data=students_df)
 plt.title("Food Type by Mood Category")
-plt.show()
+plt.savefig("figures/3-3-food-type-by-mood.png", dpi=150, bbox_inches="tight")
+plt.close()
 
 # INTERPREATION:
 # Shows if mood changes what type of food people choose.
@@ -378,7 +417,8 @@ plt.show()
 plt.figure(figsize=(6,4))
 sns.countplot(x="budget_constraint", hue="food_type", data=students_df)
 plt.title("Food Type by Budget Constraint")
-plt.show()
+plt.savefig("figures/3-4-food-type-by-budget.png", dpi=150, bbox_inches="tight")
+plt.close()
 
 # INTERPREATION:
 # Shows if budget levels changes what type of food people choose.
@@ -387,7 +427,8 @@ plt.show()
 plt.figure(figsize=(6,4))
 sns.barplot(x="stress_category", y="comfort_food_behaviour", data=students_df)
 plt.title("Comfort Food Behaviour by Stress Category")
-plt.show()
+plt.savefig("figures/3-5-comfort-food-by-stress.png", dpi=150, bbox_inches="tight")
+plt.close()
 
 # INTERPREATION:
 # Shows if stress makes comfort food the more likely choice.
@@ -396,7 +437,8 @@ plt.show()
 plt.figure(figsize=(6,4))
 sns.barplot(x="stress_category", y="ordered_delivery", data=students_df)
 plt.title("Delivery Orders by Stress Category")
-plt.show()
+plt.savefig("figures/3-6-delivery-orders-by-stress.png", dpi=150, bbox_inches="tight")
+plt.close()
 
 # INTERPREATION:
 # Shows if stress makes delivery food the more likely choice.
@@ -405,7 +447,8 @@ plt.show()
 plt.figure(figsize=(6,4))
 sns.barplot(x="exam_period", y="comfort_food_behaviour", data=students_df)
 plt.title("Comfort Food Behaviour by Exam Period")
-plt.show()
+plt.savefig("figures/3-7-comfort-food-by-exam.png", dpi=150, bbox_inches="tight")
+plt.close()
 
 # INTERPREATION:
 # Shows if comfort food is more common during exams.
@@ -430,8 +473,8 @@ spending_positive = students_df[students_df["mood_category"] == "positive"]["act
 spending_negative = students_df[students_df["mood_category"] == "negative"]["actual_amount_spent"]
 
 # Run independant t-test
-t_stat, p_value = ttest_ind(spending_positive, spending_negative, equal_var=False)
-print(f"T-Statistic: {t_stat}, p-value: {p_value}")
+t_mood, p_mood = ttest_ind(spending_positive, spending_negative, equal_var=False)
+print(f"T-Statistic: {t_mood}, p-value: {p_mood}")
 
 # B) Does "budget" influence actual_amount_spent
 
@@ -441,8 +484,8 @@ spending_low = students_df[students_df["budget_constraint"] == "low budget"]["ac
 spending_medium = students_df[students_df["budget_constraint"] == "medium budget"]["actual_amount_spent"]
 spending_high = students_df[students_df["budget_constraint"] == "high budget"]["actual_amount_spent"]
 
-f_stat, p_value = f_oneway(spending_low, spending_medium, spending_high)
-print(f"F-Statistic: {f_stat}, p-value: {p_value}")
+f_budget, p_budget = f_oneway(spending_low, spending_medium, spending_high)
+print(f"F-Statistic: {f_budget}, p-value: {p_budget}")
 
 # C) Does "mood" influence food_type
 
@@ -452,8 +495,8 @@ from scipy.stats import chi2_contingency
 ct = pd.crosstab(students_df["mood_category"], students_df["food_type"])
 
 # Run chi-square test
-chi2, p, dof, expected = chi2_contingency(ct)
-print(f"Chi2: {chi2}, p-value: {p}")
+chi2_mood_food, p_mood_food, dof, expected = chi2_contingency(ct)
+print(f"Chi2: {chi2_mood_food}, p-value: {p_mood_food}")
 
 # D) Does "budget" influence food_type
 
@@ -461,30 +504,30 @@ print(f"Chi2: {chi2}, p-value: {p}")
 ct = pd.crosstab(students_df["budget_constraint"], students_df["food_type"])
 
 # Run chi-square test
-chi2, p, dof, expected = chi2_contingency(ct)
-print(f"Chi2: {chi2}, p-value: {p}")
+chi2_budget_food, p_budget_food, dof, expected = chi2_contingency(ct)
+print(f"Chi2: {chi2_budget_food}, p-value: {p_budget_food}")
 
 # QUESTION 2 - DO STRESS AND EXAM PERIODS LEAD TO MORE DELIVERY AND COMFORT FOOD CONSUMPTION?
 # A) Does stress affect "comfort_food_behaviour".
 
 ct = pd.crosstab(students_df["stress_category"], students_df["comfort_food_behaviour"])
 
-chi2, p, dof, expected = chi2_contingency(ct)
-print(f"chi2: {chi2}, p-value: {p}")
+chi2_stress_comfort, p_stress_comfort, dof, expected = chi2_contingency(ct)
+print(f"Chi2: {chi2_stress_comfort}, p-value: {p_stress_comfort}")
 
 # B) Does "exam_period" affect comfort_food_behaviour.
 
 ct = pd.crosstab(students_df["exam_period"], students_df["comfort_food_behaviour"])
 
-chi2, p, dof, expected = chi2_contingency(ct)
-print(f"Chi2: {chi2}, p-value: {p}")
+chi2_exam_comfort, p_exam_comfort, dof, expected = chi2_contingency(ct)
+print(f"Chi2: {chi2_exam_comfort}, p-value: {p_exam_comfort}")
 
 # C) Does stress affect "ordered_delivery".
 
 ct = pd.crosstab(students_df["stress_category"], students_df["ordered_delivery"])
 
-chi2, p, dof, expected = chi2_contingency(ct)
-print(f"Chi2: {chi2}, p-value: {p}")
+chi2_stress_delivery, p_stress_delivery, dof, expected = chi2_contingency(ct)
+print(f"Chi2: {chi2_stress_delivery}, p-value: {p_stress_delivery}")
 
 
 print("\n" + "="*10)
@@ -500,35 +543,48 @@ print("🎯 Finally: Statistical testing and insights")
 print("\n" + "="*40)
 print("🎯 STATISTICAL TESTING INSIGHTS:")
 print("="*40)
-print("""
-1. Actual Amount Spent by Mood: "No Significant Difference" (p = 0.31 > 0.05)
-Therefore, Mood DOESN'T have a significant influence on spending choices.
+print(f"""
+1. Spending by mood: t = {t_mood:.2f}, p = {p_mood:.3f}
+   {'Significant' if p_mood < 0.05 else 'No significant difference'} — mood does not drive how much students spend.
 
-2. Actual Amount Spent by Budget: "Significant Difference" (p < 0.05)
-Therefore, Budget DOES have a significant influence on spending choices.
+2. Spending by budget: F = {f_budget:.2f}, p = {p_budget:.2e}
+   {'Significant' if p_budget < 0.05 else 'No significant difference'} — budget is the dominant factor.
 
-3. Food Type by Mood: "CLOSE, No Significant Difference" (p = 0.057 > 0.05)
-Therefore, Mood has a "weak" BUT NOT a significant influence on food choices.
+3. Food type by mood: chi2 = {chi2_mood_food:.2f}, p = {p_mood_food:.3f}
+   Borderline; suggestive but not significant at 0.05.
 
-4. Food Type by Budget: "Significant Difference" (p = 0.0001 < 0.05)
-Therefore, Budget DOES have a significant influence on food choices.
-      
-5. Comfort Food Behaviour by Stress: "No Significant Difference" (p = 0.413 > 0.05)
-Therefore, Stress DOESN'T have a significant infLuence on comfort food consumption.
-      
-6. Comfort Food Behaviour by Exam Periods: "No Significant Difference" (p = 0.287 > 0.05)
-Therefore, Exam Periods DON'T have a significant influence on comfort food consumption.
-      
-7. Delivery Orders by Stress: "Significant Difference" (p = 0.001 < 0.05)
-Therefore, Stress DOES have a significant influence on delivery orders.
+4. Food type by budget: chi2 = {chi2_budget_food:.2f}, p = {p_budget_food:.5f}
+   Significant — budget shapes what students eat, not just how much they spend.
+
+5. Comfort food by stress: chi2 = {chi2_stress_comfort:.2f}, p = {p_stress_comfort:.3f}
+   UNDERPOWERED — only 4 of 35 students met the comfort-eating definition.
+   Expected cell counts fall below 5, so chi-square assumptions are not met.
+   Treat as inconclusive rather than as a null result.
+
+6. Comfort food by exam period: chi2 = {chi2_exam_comfort:.2f}, p = {p_exam_comfort:.3f}
+   UNDERPOWERED for the same reason.
+
+7. Food ordering by stress: chi2 = {chi2_stress_delivery:.2f}, p = {p_stress_delivery:.5f}
+   Significant. Note: every student who ordered food chose delivery, so this
+   measures ordering versus microwaving, not delivery versus other ordering.
 """)
 
 print("\n" + "="*20)
 print("🏁 OVERALL SUMMARY")
 print("="*20)
-print("""
-Overall, budget constraints have the strongest influence on both spending and food choices among students, 
-while mood plays only a minor role. Stress levels affect the likelihood of ordering delivery food, 
-but neither stress nor exam periods significantly impact comfort food consumption.
+print(f"""
+Across 35 students, budget was the dominant factor in both how much was spent
+(F = {f_budget:.1f}, p < 0.001) and what was eaten (chi2 = {chi2_budget_food:.1f}, p < 0.001).
+Mood showed no significant effect on spending and only a borderline one on food
+type (p = {p_mood_food:.3f}).
+
+Stress predicted whether students ordered food at all rather than microwaving
+something (p < 0.001). Its relationship to comfort eating could not be tested
+reliably: only 4 of 35 students met the definition, leaving expected cell counts
+below the threshold chi-square requires.
+
+This is a pilot study. The sample is small and self-reported, and the comfort
+food result in particular should be treated as a question for a larger sample
+rather than an answer.
 """)
 
